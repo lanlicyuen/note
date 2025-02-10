@@ -3,7 +3,8 @@ import mysql.connector
 import bcrypt
 import functools
 import requests
-from config import DEEPSEEK_API_KEY
+from config import DEEPSEEK_API_KEY, WEATHER_API_KEY
+from openai import OpenAI
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # 设置 session secret key
@@ -305,6 +306,195 @@ def analyze_memos():
     finally:
         cursor.close()
         conn.close()
+
+# 创建 OpenAI 客户端
+client = OpenAI(
+    api_key=DEEPSEEK_API_KEY,
+    base_url="https://api.deepseek.com"
+)
+
+@app.route("/analyze_memo/<int:memo_id>", methods=['POST'])
+@login_required
+def analyze_memo(memo_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        sql = "SELECT memo_title, memo_type, memo_date, memo_content FROM memos WHERE id = %s AND user_id = %s"
+        val = (memo_id, session.get('user_id'))
+        cursor.execute(sql, val)
+        memo = cursor.fetchone()
+        
+        if not memo:
+            return jsonify({"status": "error", "message": "备忘不存在"})
+        
+        # 提取地点信息（简单示例，实际应使用更复杂的NLP）
+        content = memo[3].lower()
+        location = None
+        for city in ["北京", "上海", "广州", "深圳"]:  # 可以扩展城市列表
+            if city in content:
+                location = city
+                break
+        
+        # 构建提示词
+        prompt = f"""
+分析以下备忘录内容：
+标题：{memo[0]}
+类型：{memo[1]}
+日期：{memo[2]}
+内容：{memo[3]}
+
+请从以下几个方面提供建议：
+1. 识别内容中的关键词并提供相关建议
+2. 基于日期和类型提供合适的时间建议
+"""
+        
+        # 如果检测到地点，添加地点相关提示
+        if location:
+            prompt += f"""
+3. 针对地点 {location} 的具体建议：
+   - 交通方式和路线规划
+   - 适合的活动场所和地点
+   - 当地特色推荐
+   - 需要提前准备的事项
+"""
+        
+        # 构建提示词
+        messages = [
+            {
+                "role": "system", 
+                "content": "你是一个专业的备忘录分析助手。请直接分析内容中的关键信息，提供具体且实用的建议，避免笼统的评价。如果发现与时间、地点、人物相关的信息，请给出针对性的详细建议。"
+            },
+            {"role": "user", "content": prompt}
+        ]
+        
+        try:
+            response = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=messages,
+                stream=False
+            )
+            analysis = response.choices[0].message.content
+            
+            # 如果有地点信息，尝试获取天气信息
+            if location:
+                try:
+                    weather_info = get_weather(location, memo[2])
+                    if "失败" not in weather_info and "超出" not in weather_info:
+                        analysis += f"\n\n当前天气信息：\n{weather_info}"
+                    else:
+                        analysis += f"\n\n天气信息：{weather_info}"
+                except Exception as weather_error:
+                    analysis += f"\n\n天气信息：获取失败 ({str(weather_error)})"
+            
+            return jsonify({"status": "success", "analysis": analysis})
+            
+        except Exception as api_error:
+            print(f"API error: {str(api_error)}")
+            return jsonify({
+                "status": "error",
+                "message": f"AI API 调用失败：{str(api_error)}"
+            })
+            
+    except Exception as e:
+        print(f"General error: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": f"系统错误：{str(e)}"
+        })
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/save_analysis", methods=['POST'])
+@login_required
+def save_analysis():
+    try:
+        memo_id = request.json.get('memo_id')
+        analysis_content = request.json.get('analysis_content')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        sql = "INSERT INTO analysis_records (memo_id, analysis_content) VALUES (%s, %s)"
+        val = (memo_id, analysis_content)
+        cursor.execute(sql, val)
+        conn.commit()
+        
+        return jsonify({"status": "success", "message": "分析结果已保存"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/analysis_history/<int:memo_id>")
+@login_required
+def analysis_history(memo_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        sql = """
+            SELECT ar.* FROM analysis_records ar
+            JOIN memos m ON ar.memo_id = m.id
+            WHERE m.id = %s AND m.user_id = %s
+            ORDER BY ar.created_at DESC
+        """
+        val = (memo_id, session.get('user_id'))
+        cursor.execute(sql, val)
+        records = cursor.fetchall()
+        
+        formatted_records = [{
+            'id': record[0],
+            'analysis_content': record[2],
+            'created_at': record[3].strftime('%Y-%m-%d %H:%M:%S')
+        } for record in records]
+        
+        return jsonify({
+            "status": "success",
+            "records": formatted_records
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_weather(city, date):
+    try:
+        response = requests.get(
+            f"https://api.weatherapi.com/v1/forecast.json",
+            params={
+                "key": WEATHER_API_KEY,
+                "q": city,
+                "dt": date
+            },
+            timeout=5  # 设置5秒超时
+        )
+        print(f"Weather API Response: {response.text}")  # 调试日志
+        
+        if response.status_code == 200:
+            data = response.json()
+            if 'forecast' in data and 'forecastday' in data['forecast'] and data['forecast']['forecastday']:
+                forecast = data['forecast']['forecastday'][0]['day']
+                return f"""
+天气：{forecast.get('condition', {}).get('text', '未知')}
+温度：{forecast.get('avgtemp_c', '未知')}°C
+降水概率：{forecast.get('daily_chance_of_rain', '未知')}%
+"""
+            else:
+                return "暂无该日期天气预报信息"
+        elif response.status_code == 400:
+            return "日期超出预报范围（最多支持14天预报）"
+        else:
+            return f"天气信息获取失败（HTTP {response.status_code}：{response.text}）"
+    except requests.exceptions.Timeout:
+        return "天气 API 连接超时"
+    except requests.exceptions.ConnectionError:
+        return "天气 API 连接失败，请检查网络"
+    except Exception as e:
+        print(f"Weather API error: {str(e)}")  # 调试日志
+        return f"天气信息获取失败：{str(e)}"
 
 @app.route("/")
 def index():

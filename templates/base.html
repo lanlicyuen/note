@@ -5,6 +5,17 @@
   <title>{% block title %}MyApp{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .main-content {
+      flex: 1;
+    }
+    .footer {
+      margin-top: auto;
+    }
     .fade-in {
       animation: fadeIn 0.5s ease-out forwards;
     }
@@ -33,10 +44,13 @@
     </nav>
   </header>
 
-  {% block content %}{% endblock %}
+  <!-- Main Content -->
+  <div class="main-content">
+    {% block content %}{% endblock %}
+  </div>
 
   <!-- Footer -->
-  <footer class="bg-white border-t fade-in">
+  <footer class="footer bg-white border-t fade-in">
     <div class="container mx-auto px-4 py-6 text-center text-gray-500">
       © 2025 MyApp. All rights reserved.
     </div>

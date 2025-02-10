@@ -25,9 +25,7 @@
     <nav class="container mx-auto px-4 py-4 flex flex-wrap justify-between items-center">
       <div class="text-xl font-bold">MyApp</div>
       <ul class="flex space-x-6">
-        <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="#">Home</a></li>
-        <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="#">Features</a></li>
-        <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="#">Contact</a></li>
+        <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="/">Home</a></li>
         <!-- 根据登录状态显示不同的菜单 -->
         {% if session.user_id %}
           <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="#" onclick="openModal('addMemoModal')">添加备忘</a></li>
