@@ -1,0 +1,37 @@
+<!-- filepath: /d:/Python-App/Notes_App/templates/edit_memo.html -->
+{% extends "base.html" %}
+
+{% block title %}编辑备忘 - MyApp{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+  <h1 class="text-2xl font-semibold mb-4">编辑备忘</h1>
+  <form action="/memo/update/{{ memo.id }}" method="post">
+    <div class="mb-4">
+      <label for="memoTitle" class="block text-gray-700 text-sm font-bold mb-2">标题</label>
+      <input type="text" id="memoTitle" name="memoTitle" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ memo.memo_title }}" required>
+    </div>
+    <div class="mb-4">
+      <label for="memoType" class="block text-gray-700 text-sm font-bold mb-2">类型</label>
+      <select id="memoType" name="memoType" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        <option value="人物" {% if memo.memo_type == '人物' %}selected{% endif %}>人物</option>
+        <option value="事件" {% if memo.memo_type == '事件' %}selected{% endif %}>事件</option>
+      </select>
+    </div>
+    <div class="mb-4">
+      <label for="memoDate" class="block text-gray-700 text-sm font-bold mb-2">日期</label>
+      <input type="date" id="memoDate" name="memoDate" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ memo.memo_date }}">
+    </div>
+    <div class="mb-4">
+      <label for="memoRemindDays" class="block text-gray-700 text-sm font-bold mb-2">提前提醒天数</label>
+      <input type="number" id="memoRemindDays" name="memoRemindDays" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ memo.memo_remind_days }}">
+    </div>
+    <div class="mb-4">
+      <label for="memoContent" class="block text-gray-700 text-sm font-bold mb-2">内容</label>
+      <textarea id="memoContent" name="memoContent" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">{{ memo.memo_content }}</textarea>
+    </div>
+    <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 focus:outline-none focus:shadow-outline">更新</button>
+    <a href="/memo/{{ memo.id }}" class="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-700 focus:outline-none focus:shadow-outline">取消</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+<!-- filepath: /d:/Python-App/Notes_App/templates/login.html -->
+{% extends "base.html" %}
+
+{% block title %}登录 - MyApp{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+  <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-2xl font-semibold mb-4">登录</h2>
+    <form id="loginForm" onsubmit="loginUser(event)">
+      <div class="mb-4">
+        <label for="username" class="block text-gray-700 text-sm font-bold mb-2">用户名</label>
+        <input type="text" id="username" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+      </div>
+      <div class="mb-6">
+        <label for="password" class="block text-gray-700 text-sm font-bold mb-2">密码</label>
+        <input type="password" id="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+      </div>
+      <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 focus:outline-none focus:shadow-outline">
+        登录
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loginUser(event) {
+  event.preventDefault();
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  try {
+    const response = await fetch('/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username: username, password: password })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert('登录成功！');
+      window.location.href = "/"; // 登录成功后跳转到首页
+    } else {
+      alert('登录失败：' + data.message);
+    }
+  } catch (error) {
+    alert('登录出错：' + error);
+  }
+}
+</script>
+{% endblock %}

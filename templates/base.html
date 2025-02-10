@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}MyApp{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .fade-in {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-100">
+  <!-- Header -->
+  <header class="bg-white shadow fade-in">
+    <nav class="container mx-auto px-4 py-4 flex flex-wrap justify-between items-center">
+      <div class="text-xl font-bold">MyApp</div>
+      <ul class="flex space-x-6">
+        <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="/">Home</a></li>
+        {% if session.user_id %}
+          <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="#" onclick="openModal('addMemoModal')">添加备忘</a></li>
+          <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="/logout">注销</a></li>
+        {% else %}
+          <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="/login">登录</a></li>
+          <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="/register">注册</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+
+  {% block content %}{% endblock %}
+
+  <!-- Footer -->
+  <footer class="bg-white border-t fade-in">
+    <div class="container mx-auto px-4 py-6 text-center text-gray-500">
+      © 2025 MyApp. All rights reserved.
+    </div>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

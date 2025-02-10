@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 自定义淡入动画 */
+    .modal-transition {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .modal-enter {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    .modal-enter-active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4 py-6">
+    <!-- 页面顶部按钮区 -->
+    <div class="flex flex-col md:flex-row gap-4 justify-center">
+      <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition" 
+          onclick="openModal('registerModal')">Register</button>
+      <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition" 
+          onclick="openModal('loginModal')">Login</button>
+      <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition" 
+          onclick="openModal('logoutModal')">Logout</button>
+      <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition" 
+          onclick="openModal('deleteModal')">Delete Account</button>
+    </div>
+  </div>
+
+  <!-- Register Modal -->
+  <div id="registerModal" class="modal hidden fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
+    <div class="bg-white p-6 rounded shadow-lg modal-transition modal-enter">
+      <h2 class="text-xl mb-2">Register</h2>
+      <form id="registerForm" onsubmit="registerUser(event)">
+        <!-- 表单输入内容 -->
+        <input type="text" id="username" placeholder="Username" class="border p-2 mb-4 w-full" required />
+        <input type="password" id="password" placeholder="Password" class="border p-2 mb-4 w-full" required />
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Submit</button>
+      </form>
+      <button class="mt-4 bg-gray-300 px-3 py-1 rounded hover:bg-gray-400 transition" 
+          onclick="closeModal('registerModal')">Close</button>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal hidden fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
+    <div class="bg-white p-6 rounded shadow-lg modal-transition modal-enter">
+      <h2 class="text-xl mb-2">Login</h2>
+      <form>
+        <!-- 表单输入内容 -->
+        <input type="text" placeholder="Username" class="border p-2 mb-4 w-full" />
+        <input type="password" placeholder="Password" class="border p-2 mb-4 w-full" />
+        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Submit</button>
+      </form>
+      <button class="mt-4 bg-gray-300 px-3 py-1 rounded hover:bg-gray-400 transition" 
+          onclick="closeModal('loginModal')">Close</button>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div id="logoutModal" class="modal hidden fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
+    <div class="bg-white p-6 rounded shadow-lg modal-transition modal-enter">
+      <h2 class="text-xl mb-2">Logout</h2>
+      <p>确定要注销吗？</p>
+      <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Confirm</button>
+      <button class="mt-4 bg-gray-300 px-3 py-1 rounded hover:bg-gray-400 transition" 
+          onclick="closeModal('logoutModal')">Close</button>
+    </div>
+  </div>
+
+  <!-- Delete Account Modal -->
+  <div id="deleteModal" class="modal hidden fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
+    <div class="bg-white p-6 rounded shadow-lg modal-transition modal-enter">
+      <h2 class="text-xl mb-2">Delete Account</h2>
+      <p>确定要删除账户吗？操作不可恢复。</p>
+      <button class="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">Delete</button>
+      <button class="mt-4 bg-gray-300 px-3 py-1 rounded hover:bg-gray-400 transition" 
+          onclick="closeModal('deleteModal')">Close</button>
+    </div>
+  </div>
+
+  <script>
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.remove('hidden');
+      // 触发淡入动画
+      const content = modal.querySelector('.modal-transition');
+      content.classList.remove('modal-enter');
+      setTimeout(() => {
+        content.classList.add('modal-enter-active');
+      }, 10);
+    }
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      // 逆向动画
+      const content = modal.querySelector('.modal-transition');
+      content.classList.remove('modal-enter-active');
+      content.classList.add('modal-enter');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+
+    async function registerUser(event) {
+      event.preventDefault(); // 阻止表单默认提交行为
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch('/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username: username, password: password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert('注册成功！');
+          closeModal('registerModal');
+        } else {
+          alert('注册失败：' + data.message);
+        }
+      } catch (error) {
+        alert('注册出错：' + error);
+      }
+    }
+  </script>
+</body>
+</html>

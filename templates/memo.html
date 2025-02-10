@@ -1,0 +1,18 @@
+<!-- filepath: /d:/Python-App/Notes_App/templates/memo.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ memo.memo_title }} - MyApp{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+  <h1 class="text-2xl font-semibold mb-4">{{ memo.memo_title }}</h1>
+  <p>类型：{{ memo.memo_type }}</p>
+  <p>日期：{{ memo.memo_date }}</p>
+  <p>提前提醒天数：{{ memo.memo_remind_days }}</p>
+  <p>内容：{{ memo.memo_content }}</p>
+  <div class="mt-4">
+    <a href="/memo/edit/{{ memo.id }}" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700">编辑</a>
+    <a href="/memo/delete/{{ memo.id }}" class="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-700">删除</a>
+  </div>
+</div>
+{% endblock %}

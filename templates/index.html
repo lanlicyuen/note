@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Modern Homepage</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 自定义淡入动画 */
+    .fade-in {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <!-- Header -->
+  <header class="bg-white shadow fade-in">
+    <nav class="container mx-auto px-4 py-4 flex flex-wrap justify-between items-center">
+      <div class="text-xl font-bold">MyApp</div>
+      <ul class="flex space-x-6">
+        <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="#">Home</a></li>
+        <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="#">Features</a></li>
+        <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="#">Contact</a></li>
+        <!-- 根据登录状态显示不同的菜单 -->
+        {% if session.user_id %}
+          <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="#" onclick="openModal('addMemoModal')">添加备忘</a></li>
+          <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="/logout">注销</a></li>
+        {% else %}
+          <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="/login">登录</a></li>
+          <li><a class="text-gray-600 hover:text-blue-500 transition duration-300" href="/register">注册</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+  
+  <!-- Hero Section -->
+  <section class="container mx-auto px-4 py-16 text-center fade-in">
+    <h1 class="text-4xl md:text-5xl font-bold mb-4">欢迎来到 MyApp</h1>
+    <p class="text-gray-700 md:text-lg mb-6">一个简单又高效的备忘录查询系统</p>
+    {% if not session.user_id %}
+    <a href="/register" class="bg-blue-500 text-white py-2 px-6 rounded hover:bg-blue-600 transition duration-300">
+      立即注册
+    </a>
+    {% endif %}
+  </section>
+  
+  <!-- Memo List Section -->
+  <section class="container mx-auto px-4 py-8">
+    <h2 class="text-2xl font-semibold mb-4">备忘列表</h2>
+    {% if memos %}
+      <div class="flex justify-between items-start">
+        <ul class="w-2/3">
+          {% for memo in memos %}
+            <li class="mb-2 flex items-center justify-between">
+              <a href="/memo/{{ memo.id }}">{{ memo.memo_title }}</a>
+              <input type="checkbox" value="{{ memo.id }}" class="memo-checkbox ml-4">
+            </li>
+          {% endfor %}
+        </ul>
+        <button onclick="analyzeSelectedMemos()" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-700">AI 分析</button>
+      </div>
+    {% else %}
+      <p>暂无备忘信息</p>
+    {% endif %}
+  </section>
+  
+  <!-- Footer -->
+  <footer class="bg-white border-t fade-in">
+    <div class="container mx-auto px-4 py-6 text-center text-gray-500">
+      © 2025 MyApp. All rights reserved.
+    </div>
+  </footer>
+
+  <!-- Add Memo Modal -->
+  <div id="addMemoModal" class="modal hidden fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
+    <div class="bg-white p-6 rounded shadow-lg modal-transition modal-enter">
+      <h2 class="text-xl mb-2">添加备忘</h2>
+      <form id="addMemoForm" onsubmit="addMemo(event)">
+        <div class="mb-4">
+          <label for="memoTitle" class="block text-gray-700 text-sm font-bold mb-2">标题</label>
+          <input type="text" id="memoTitle" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+        </div>
+        <div class="mb-4">
+          <label for="memoType" class="block text-gray-700 text-sm font-bold mb-2">类型</label>
+          <select id="memoType" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            <option>人物</option>
+            <option>事件</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label for="memoDate" class="block text-gray-700 text-sm font-bold mb-2">日期</label>
+          <input type="date" id="memoDate" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        </div>
+        <div class="mb-4">
+          <label for="memoRemindDays" class="block text-gray-700 text-sm font-bold mb-2">提前提醒天数</label>
+          <input type="number" id="memoRemindDays" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        </div>
+        <div class="mb-4">
+          <label for="memoContent" class="block text-gray-700 text-sm font-bold mb-2">内容</label>
+          <textarea id="memoContent" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+        </div>
+        <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 focus:outline-none focus:shadow-outline">添加</button>
+        <button type="button" class="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-700 focus:outline-none focus:shadow-outline" onclick="closeModal('addMemoModal')">取消</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.add('hidden');
+    }
+
+    async function addMemo(event) {
+      event.preventDefault(); // 阻止表单默认提交行为
+
+      const memoTitle = document.getElementById('memoTitle').value;
+      const memoType = document.getElementById('memoType').value;
+      const memoDate = document.getElementById('memoDate').value;
+      const memoRemindDays = document.getElementById('memoRemindDays').value;
+      const memoContent = document.getElementById('memoContent').value;
+
+      try {
+        const response = await fetch('/add_memo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            memoTitle: memoTitle,
+            memoType: memoType,
+            memoDate: memoDate,
+            memoRemindDays: memoRemindDays,
+            memoContent: memoContent
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+          alert('备忘添加成功！');
+          closeModal('addMemoModal');
+          // 使用 window.location.href 而不是 reload
+          window.location.href = '/';
+        } else {
+          alert('备忘添加失败：' + data.message);
+        }
+      } catch (error) {
+        alert('备忘添加出错：' + error);
+      }
+    }
+
+    async function analyzeSelectedMemos() {
+      const selectedMemos = Array.from(document.querySelectorAll('.memo-checkbox:checked')).map(cb => cb.value);
+      if (selectedMemos.length === 0) {
+        alert('请选择要分析的备忘录');
+        return;
+      }
+
+      try {
+        const response = await fetch('/analyze_memos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            memo_ids: selectedMemos
+          })
+        });
+
+        const data = await response.json();
+        if (data.status === 'success') {
+          alert(data.analysis);
+        } else {
+          alert('分析失败：' + data.message);
+        }
+      } catch (error) {
+        alert('分析出错：' + error);
+      }
+    }
+  </script>
+</body>
+</html>
