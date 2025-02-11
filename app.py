@@ -3,23 +3,20 @@ import mysql.connector
 import bcrypt
 import functools
 import requests
-from config import DEEPSEEK_API_KEY, WEATHER_API_KEY
 from openai import OpenAI
+from config import (
+    DEEPSEEK_API_KEY, 
+    WEATHER_API_KEY, 
+    DB_CONFIG, 
+    SECRET_KEY
+)
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # 设置 session secret key
-
-# 数据库连接配置
-db_config = {
-    "host": "1.1.1.8",
-    "user": "notes_user",   # 你的 MySQL 用户名
-    "password": "mydAFwXbxkydeM6B",  # 你的 MySQL 密码
-    "database": "notes_app"
-}
+app.secret_key = SECRET_KEY
 
 # 连接数据库
 def get_db_connection():
-    return mysql.connector.connect(**db_config)
+    return mysql.connector.connect(**DB_CONFIG)
 
 # 登录验证装饰器
 def login_required(view):
